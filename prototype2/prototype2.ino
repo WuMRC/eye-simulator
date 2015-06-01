@@ -5,7 +5,7 @@ int buzzerPin = 9; // Buzzer pin
 int pressurePin = A0; // Pin to take pressure reading
 int pressureValue; // Pressure value in analog units
 float pressureInmmHg; // Pressure value in mmHg
-float desiredVoltage = (((10.0*4.0/500.0/0.7500061683)+2.5)*1024/5); // Desired analog read value (assuming 17mmHg)
+float desiredVoltage = (((10.0*4.0/500.0/0.7500061683)+2.5)*1024/5); // Desired analog read value (assuming 10mmHg)
 float basePressure; // Pressure that will be used as base (intraocular pressure)
 const float zeroPressure = 2.5*1024/5;
 // long delayValue = 1000000/2500/2; // Delay for buzzer
@@ -125,7 +125,7 @@ void loop(){
      Serial.print("\r\n");
  
      // If pressure gets too low
-     if( (pressureValue < basePressure - 17) || (pressureValue < zeroPressure-5) || ((pressureValue < zeroPressure+5) && (averageCounter >= 10)) )
+     if( (pressureValue < basePressure - 10) || (pressureValue < zeroPressure-5) || ((pressureValue < zeroPressure+5) && (averageCounter >= 10)) )
      //if(pressureValue < zeroPressure)
      {
        digitalWrite(redLED, HIGH);
