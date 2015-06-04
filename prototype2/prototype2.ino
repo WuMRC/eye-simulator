@@ -5,7 +5,9 @@ int buzzerPin = 9; // Buzzer pin
 int pressurePin = A0; // Pin to take pressure reading
 int pressureValue; // Pressure value in analog units
 float pressureInmmHg; // Pressure value in mmHg
-float desiredVoltage = (((10.0*4.0/500.0/0.7500061683)+2.5)*1024/5); // Desired analog read value (assuming 10mmHg)
+const float desiredPressure = 18.0; // Threshold for initialzation - 18mmHg
+float desiredVoltage = (((desiredPressure*4.0/500.0/0.7500061683)+2.5)*1024/5); // Desired analog read value 
+// 0.45 mmHg per 1 in ADC
 float basePressure; // Pressure that will be used as base (intraocular pressure)
 const float zeroPressure = 2.5*1024/5;
 // long delayValue = 1000000/2500/2; // Delay for buzzer
@@ -18,6 +20,7 @@ float average;
 // Test variables
 int averageCounter = 0;
 int canBuzz = 0;
+unsigned long buzzTimeCount = 0;
 boolean turnOnLED = false;
 
 void setup(){
@@ -34,35 +37,43 @@ void setup(){
 }
 
 void loop(){
- 
+  unsigned long currentMillis = millis();
+  pressureValue = analogRead(pressurePin);
+  pressureInmmHg = (((float)pressureValue * 5 / 1024) - 2.5) * 500 / 4 * 0.750061683; 
   if (canBuzz == 1){
-     Serial.print("mmHg: ");
-     Serial.print(pressureInmmHg);
-     Serial.print("\tAnalog Value: ");
-     Serial.print(pressureValue);
-     Serial.print("\tAverage: ");
-     Serial.print(average);
-     Serial.print("\tBase Pressure: ");
-     Serial.print(basePressure);
-     Serial.print("\tDes: ");
-     Serial.print(desiredVoltage);
-     Serial.print("\r\n");
-     Serial.print("Warning Signal\r\n");
+     if( currentMillis - buzzTimeCount < 4000 )
+     {
+       Serial.print(currentMillis / 1000.0);
+       Serial.print("\t");
+       Serial.print("mmHg: ");
+       Serial.print(pressureInmmHg);
+       Serial.print("\tAnalog Value: ");
+       Serial.print(pressureValue);
+       Serial.print("\tAverage: ");
+       Serial.print(average);
+       Serial.print("\tBase Pressure: ");
+       Serial.print(basePressure);
+       Serial.print("\tDes: ");
+       Serial.print(desiredVoltage);
+       Serial.print("\r");
+       Serial.print(" - Warning Signal\r\n");
      
-     digitalWrite(buzzerPin,HIGH); // The buzzer of this can emit sound with basic high voltage.
-     delay(4000);
-     digitalWrite(buzzerPin,LOW);
-     digitalWrite(redLED,LOW);
-     
-     // Reset
-     averageCounter = 0;
-     basePressure = 0;
-     canBuzz=0;
-     total=0;     
+       //digitalWrite(buzzerPin,HIGH); // The buzzer of this can emit sound with basic high voltage.
+     }
+     else
+     {
+       digitalWrite(buzzerPin,LOW);
+       digitalWrite(redLED,LOW);
+       // Reset
+       averageCounter = 0;
+       basePressure = 0;
+       canBuzz=0;
+       total=0;     
+     }
    }  
   else {
-     pressureValue = analogRead(pressurePin);
-     pressureInmmHg = (((float)pressureValue * 5 / 1024) - 2.5) * 500 / 4 * 0.750061683; 
+     //pressureValue = analogRead(pressurePin);
+     //pressureInmmHg = (((float)pressureValue * 5 / 1024) - 2.5) * 500 / 4 * 0.750061683; 
  
      // Turn on LED if at desiredVoltage -1, (range room of 4.58mmHg)
      if (pressureValue > desiredVoltage -1 && pressureValue < desiredVoltage + 9)
@@ -112,6 +123,8 @@ void loop(){
       digitalWrite(greenLED, LOW);
     }
 
+     Serial.print(currentMillis / 1000.0);
+     Serial.print("\t");
      Serial.print("mmHg: ");
      Serial.print(pressureInmmHg);
      Serial.print("\tAnalog Value: ");
@@ -125,18 +138,21 @@ void loop(){
      Serial.print("\r\n");
  
      // If pressure gets too low
-     if( (pressureValue < basePressure - 10) || (pressureValue < zeroPressure-5) || ((pressureValue < zeroPressure+5) && (averageCounter >= 10)) )
+     if( (pressureValue < basePressure - 35) || (pressureValue < zeroPressure-10) || ((pressureValue < zeroPressure+5) && (averageCounter >= 20)) )
      //if(pressureValue < zeroPressure)
      {
        digitalWrite(redLED, HIGH);
-      digitalWrite(greenLED, LOW);
-      canBuzz = 1;
+       digitalWrite(greenLED, LOW);
+       canBuzz = 1;
+      
+       buzzTimeCount = millis();
+       digitalWrite(buzzerPin,HIGH); // The buzzer of this can emit sound with basic high voltage.
      }
- 
      else {
       digitalWrite(redLED, LOW);
       digitalWrite(buzzerPin, LOW); 
      }
   } 
 }
+
 
