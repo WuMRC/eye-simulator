@@ -41,7 +41,7 @@ void loop(){
   pressureValue = analogRead(pressurePin);
   pressureInmmHg = (((float)pressureValue * 5 / 1024) - 2.5) * 500 / 4 * 0.750061683; 
   if (canBuzz == 1){
-     if( currentMillis - buzzTimeCount < 4000 )
+     if( currentMillis - buzzTimeCount < 2000 )
      {
        Serial.print(currentMillis / 1000.0);
        Serial.print("\t");
